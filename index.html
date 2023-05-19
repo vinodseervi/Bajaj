@@ -1,113 +1,94 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Employee Directory</title>
+  <title>Employee Search</title>
   <style>
-    /* Add some CSS styles for a visually appealing UI */
+    /* Add some basic styling for better presentation */
     body {
       font-family: Arial, sans-serif;
+      margin: 20px;
     }
-
     h1 {
       text-align: center;
     }
-
-    .search-bar {
+    .search-container {
+      text-align: center;
       margin-bottom: 20px;
     }
-
+    input[type="text"] {
+      padding: 5px;
+      width: 200px;
+    }
+    button {
+      padding: 5px 10px;
+    }
+    .employee-container {
+      margin-bottom: 10px;
+    }
     .employee-card {
       border: 1px solid #ccc;
-      border-radius: 5px;
       padding: 10px;
-      margin-bottom: 10px;
+    }
+    .employee-card p {
+      margin: 5px 0;
     }
   </style>
 </head>
 <body>
-  <h1>Employee Directory</h1>
+  <h1>Employee Search</h1>
 
-  <div class="search-bar">
-    <label for="searchByName">Search by Name:</label>
-    <input type="text" id="searchByName" placeholder="Enter name...">
-    <button onclick="searchByName()">Search</button>
+  <div class="search-container">
+    <input type="text" id="name-input" placeholder="Search by name">
+    <input type="text" id="skills-input" placeholder="Search by skills">
+    <button onclick="searchEmployees()">Search</button>
   </div>
 
-  <div class="search-bar">
-    <label for="searchBySkills">Filter by Skills:</label>
-    <input type="text" id="searchBySkills" placeholder="Enter skills...">
-    <button onclick="filterBySkills()">Filter</button>
-  </div>
-
-  <div id="employeeList"></div>
+  <div id="results-container"></div>
 
   <script>
-    let employees = [];
+    function searchEmployees() {
+      const nameInput = document.getElementById('name-input');
+      const skillsInput = document.getElementById('skills-input');
+      const nameQuery = nameInput.value.toLowerCase();
+      const skillsQuery = skillsInput.value.toLowerCase();
 
-    // Fetch JSON data from the provided link
-    fetch('https://raw.githubusercontent.com/dixitsoham7/dixitsoham7.github.io/main/index.json')
-      .then(response => response.json())
-      .then(data => {
-        employees = data.employees;
+      const resultsContainer = document.getElementById('results-container');
+      resultsContainer.innerHTML = '';
 
-        renderEmployees(employees);
-      })
-      .catch(error => console.error('Error fetching JSON:', error));
+      fetch('https://raw.githubusercontent.com/dixitsoham7/dixitsoham7.github.io/main/index.json')
+        .then(response => response.json())
+        .then(data => {
+          for (const employee of data.employees) {
+            if (
+              (nameQuery && employee.name.toLowerCase().includes(nameQuery)) ||
+              (skillsQuery && employee.skills.some(skill => skill.toLowerCase().includes(skillsQuery)))
+            ) {
+              const employeeCard = document.createElement('div');
+              employeeCard.classList.add('employee-card');
 
-  // Render employee cards
-function renderEmployees(employeesData) {
-  const employeeList = document.getElementById('employeeList');
-  employeeList.innerHTML = '';
+              const employeeName = document.createElement('p');
+              employeeName.textContent = `Name: ${employee.name}`;
+              employeeCard.appendChild(employeeName);
 
-  if (employeesData.length === 0) {
-    employeeList.style.display = 'none'; // Hide the employee list
-    return;
-  }
+              const employeeDesignation = document.createElement('p');
+              employeeDesignation.textContent = `Designation: ${employee.designation || 'N/A'}`;
+              employeeCard.appendChild(employeeDesignation);
 
-  employeeList.style.display = 'block'; // Show the employee list
+              const employeeSkills = document.createElement('p');
+              employeeSkills.textContent = `Skills: ${employee.skills.join(', ')}`;
+              employeeCard.appendChild(employeeSkills);
 
-  employeesData.forEach(employee => {
-    const card = document.createElement('div');
-    card.classList.add('employee-card');
+              resultsContainer.appendChild(employeeCard);
+            }
+          }
 
-    const name = document.createElement('h3');
-    name.textContent = employee.name;
-
-    const designation = document.createElement('p');
-    designation.textContent = `Designation: ${employee.designation}`;
-
-    const skills = document.createElement('p');
-    skills.textContent = `Skills: ${employee.skills.join(', ')}`;
-
-    card.appendChild(name);
-    card.appendChild(designation);
-    card.appendChild(skills);
-
-    employeeList.appendChild(card);
-  });
-}
-
-
-    // Search employees by name
-function searchByName() {
-  const searchTerm = document.getElementById('nameInput').value.toLowerCase();
-
-  const filteredEmployees = employees.filter(employee =>
-    employee.name && employee.name.toLowerCase().includes(searchTerm)
-  );
-
-  renderEmployees(filteredEmployees);
-}
-
-
-    // Filter employees by skills
-    function filterBySkills() {
-      const searchBySkillsInput = document.getElementById('searchBySkills');
-      const skills = searchBySkillsInput.value.split(',').map(skill => skill.trim());
-      const filteredEmployees = employees.filter(employee =>
-        skills.every(skill => employee.skills.includes(skill))
-      );
-      renderEmployees(filteredEmployees);
+          if (resultsContainer.childElementCount === 0) {
+            const noResults = document.createElement('p');
+            noResults.textContent = 'No matching employees found.';
+            resultsContainer.appendChild(noResults);
+          }
+        })
+        .catch(error => console.log('Error:', error));
     }
   </script>
 </body>
